@@ -275,8 +275,3 @@ black =
 darkGray : Color
 darkGray =
     Element.rgb255 66 65 56
-
-
-gray : Color
-gray =
-    Element.rgb255 127 140 141
