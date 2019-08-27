@@ -1,8 +1,6 @@
 module Main exposing (main)
 
 import Browser
-import Element exposing (Color, Element)
-import Element.Font as Font
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -115,163 +113,151 @@ userDecoder =
 
 view : Model -> Html Msg
 view model =
-    toHtml <|
-        Element.column
-            [ Element.padding 10
-            ]
-            [ Element.html <| inputForm model
-            , case model.userState of
-                Init ->
-                    Element.text ""
+    div
+        [ class "main" ]
+        [ inputForm model
+        , case model.userState of
+            Init ->
+                text ""
 
-                Waiting ->
-                    Element.text "Please wait..."
+            Waiting ->
+                text "Please wait..."
 
-                Loaded user ->
-                    userInfo user
+            Loaded userInfo ->
+                showUserInfo userInfo
 
-                Failed e ->
-                    Element.text <| Debug.toString e
-            ]
-
-
-toHtml : Element Msg -> Html Msg
-toHtml =
-    Element.layout []
+            Failed e ->
+                text <| Debug.toString e
+        ]
 
 
 inputForm : Model -> Html Msg
 inputForm model =
     div
-        []
+        [ class "inputForm" ]
         [ Html.form
             [ onSubmit Send ]
             [ input
-                [ onInput Input
+                [ class "input"
+                , onInput Input
                 , autofocus True
                 , placeholder "GitHub name"
                 , value model.input
                 ]
                 []
             , button
-                []
+                [ class "send_button" ]
                 [ text "Submit"
                 ]
             ]
         ]
 
 
-userInfo : User -> Element Msg
-userInfo user =
-    Element.row
-        [ Element.spacing 40 ]
-        [ avatar user
-        , Element.column
-            [ Element.spacing 15 ]
-          <|
-            flap
-                [ nameAndId
-                , bio
-                , repos
-                , followrsAndFollowing
-                ]
-                user
+showUserInfo : User -> Html Msg
+showUserInfo userInfo =
+    div
+        [ class "user_info" ]
+        [ avatar userInfo
+        , showUserInfoWithoutAvatar userInfo
         ]
 
 
-flap : List (a -> b) -> a -> List b
-flap fs a =
-    case fs of
-        [] ->
-            []
-
-        f :: xs ->
-            f a :: flap xs a
-
-
-avatar : User -> Element Msg
-avatar user =
-    Element.image
+avatar : User -> Html Msg
+avatar userInfo =
+    img
+        [ class "avatar"
+        , src userInfo.avatarUrl
+        ]
         []
-        { src = user.avatarUrl
-        , description = ""
-        }
 
 
-nameAndId : User -> Element Msg
-nameAndId user =
-    Element.row
-        [ Element.spacing 10
+showUserInfoWithoutAvatar : User -> Html Msg
+showUserInfoWithoutAvatar userInfo =
+    div
+        [ class "user_info_without_avatar" ]
+        [ nameAndId userInfo
+        , bio userInfo
+        -- , repos userInfo
+        -- , followersAndFollowing userInfo
         ]
-        [ Element.el
-            [ Font.size 60 ]
-          <|
-            Element.text user.name
-        , Element.el
-            [ Font.color gray
-            , Font.size 35
-            , Element.centerY
+
+
+nameAndId : User -> Html Msg
+nameAndId userInfo =
+    div
+        [ class "name_id" ]
+        [ a
+            [ class "name"
+            , href userInfo.htmlUrl
+            , target "_blank"
             ]
-          <|
-            Element.text user.login
-        ]
-
-
-bio : User -> Element Msg
-bio user =
-    case user.bio of
-        Just s ->
-            Element.el
-                [ Font.color gray
-                , Font.size 15
-                ]
-            <|
-                Element.text s
-
-        Nothing ->
-            Element.text ""
-
-
-repos : User -> Element Msg
-repos user =
-    elementAndNumber "Repository" user.publicRepos
-
-
-followrsAndFollowing : User -> Element Msg
-followrsAndFollowing user =
-    Element.row
-        [ Element.spacing 20 ]
-        [ elementAndNumber "Followers" user.followers
-        , elementAndNumber "Following" user.following
-        ]
-
-
-elementAndNumber : String -> Int -> Element Msg
-elementAndNumber s n =
-    Element.row
-        [ Element.spacing 10 ]
-        [ Element.el
-            [ Font.color black
-            , Font.size 20
+            [ text userInfo.name ]
+        , span
+            [ class "id" ]
+            [ text userInfo.login
             ]
-          <|
-            Element.text s
-        , Element.el
-            [ Font.color darkGray
-            , Font.size 15
-            , Element.alignBottom
-            ]
-          <|
-            Element.text <|
-                String.fromInt n
         ]
 
 
-black : Color
-black =
-    Element.rgb255 19 10 9
+bio : User -> Html Msg
+bio userInfo =
+    span
+        [ class "bio" ]
+        [ case userInfo.bio of
+            Just userBio ->
+                text userBio
+
+            Nothing ->
+                text ""
+        ]
 
 
-darkGray : Color
-darkGray =
-    Element.rgb255 66 65 56
+repos : User -> Html Msg
+repos userInfo =
+    div
+        [ class "repos" ]
+        [ span
+            [ class "repos_text" ]
+            [ text "Repository" ]
+        , span
+            [ class "repos_number" ]
+            [ text <| String.fromInt userInfo.publicRepos ]
+        ]
+
+
+followersAndFollowing : User -> Html Msg
+followersAndFollowing userInfo =
+    div
+        [ class "followers_following" ]
+        [ div
+            [ class "followers" ]
+            [ span
+                [ class "followers_text" ]
+                [ text "Followers" ]
+            , span
+                [ class "followers_number" ]
+                [ text <| String.fromInt userInfo.followers ]
+            ]
+        , div
+            [ class "following" ]
+            [ span
+                [ class "following_text" ]
+                [ text "Following" ]
+            , span
+                [ class "following_number" ]
+                [ text <| String.fromInt userInfo.followers ]
+            ]
+        ]
+
+
+
+-- type alias User =
+--     { login : String
+--     , avatarUrl : Url
+--     , htmlUrl : Url
+--     , followers : Int
+--     , following : Int
+--     , publicRepos : Int
+--     , name : String
+--     , bio : Maybe String
+--     }
